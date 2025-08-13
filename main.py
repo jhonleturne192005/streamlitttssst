@@ -65,7 +65,7 @@ def main():
         st.subheader("Sube un archivo de audio y muestra el texto transcrito")
 
         # Subir archivo de audio existente
-        audio_file = st.file_uploader("Selecciona un archivo de audio", type=["mp3", "wav", "ogg","m4a"])
+        audio_file = st.file_uploader("Selecciona un archivo de audio", type=["mp3", "wav", "ogg","m4a"],type=None)
 
         if audio_file is not None:
             st.audio(audio_file, format='audio/mp3')  # Reproducir el archivo de audio subido
