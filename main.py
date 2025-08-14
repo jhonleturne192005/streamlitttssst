@@ -5,19 +5,21 @@ import time
 import io
 import requests
 import json
+from pathlib import Path
 
+lambda_url = "https://iv3nd406f1.execute-api.us-east-1.amazonaws.com/default/funciontts" 
 
 # Función para llamar a la Lambda y grabar un audio
-def upload_audio_to_lambda(audio_file):
+def upload_audio_to_lambda(audio_file,extencion):
     # Convierte el archivo de audio en base64
     audio_base64 = base64.b64encode(audio_file.read()).decode('utf-8')
     
     # URL de tu función Lambda
-    lambda_url = "https://iv3nd406f1.execute-api.us-east-1.amazonaws.com/default/funciontts" 
     
     # Cuerpo de la solicitud que incluye el audio en base64
     payload = {
-        "body": audio_base64
+        "base64": audio_base64,
+        "extencion":extencion
     }
     
     # Hacer la solicitud POST a Lambda
@@ -27,6 +29,7 @@ def upload_audio_to_lambda(audio_file):
     # Verificar si la respuesta es exitosa
     if response.status_code == 200:
         result = response.json()
+        print(result)
         return result.get('text', "No se pudo transcribir el audio.")
     else:
         return "Error al procesar el audio."
@@ -68,11 +71,18 @@ def main():
         audio_file = st.file_uploader("Selecciona un archivo de audio", type=["mp3", "wav", "ogg", "m4a", "flac"])
 
         if audio_file is not None:
-            st.audio(audio_file, format='audio/mp3')  # Reproducir el archivo de audio subido
+
+            file_name = audio_file.name
+            file_extension = Path(file_name).suffix.replace(".","")
+            st.write(f"Nombre del archivo: {file_name}")
+            st.write(f"Extensión del archivo: {file_extension}")
+
+            st.audio(audio_file, format='audio/{file_extension}')  # Reproducir el archivo de audio subido
 
             if st.button("Convertir a Texto"):
                 st.write("Procesando audio...")
-                result = upload_audio_to_lambda(audio_file)
+                result = upload_audio_to_lambda(audio_file,file_extension)
+                print(result)
                 st.write("Texto transcrito:")
 
                 response = requests.get(result)
@@ -85,7 +95,6 @@ def main():
                 jsondata=response.json()
                 transcription = jsondata['results']['transcripts'][0]['transcript']
                 st.text_area("Texto", value=transcription, height=200)
-
 
     elif option == "Ingresar Texto":
         st.subheader("Ingresa texto y conviértelo a voz")
